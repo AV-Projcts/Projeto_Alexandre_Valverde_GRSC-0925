@@ -2,4 +2,4 @@
 Este projeto contem scripts linux para config de DHCP e DNS
 ## Instrucoes de uso
 1 - x
-2 - y
+/n2 - y
