@@ -10,9 +10,17 @@ subnet=0
 gatewayipserv=0
 confirmar=0
 
-# intro
-opcao=0
-criar=0
+# DNS
+dominioDNS=""
+ipserverDNS=""
+
+# Menus
+opcao=""
+criar=""
+restBak=""
+restBakError=""
+createBak=""
+createBakError=""
 
 
 
@@ -23,7 +31,7 @@ DHCPmaxMax=0
 
 # ----------------------------- * Configuração * ----------------------------- #
 
-# Clear e Banner vibe
+# Clear e Banner vibe coded
 clear
 cat <<'BANNER'
  __    __  ________   ______
@@ -42,7 +50,7 @@ printf "\n\n\n\n"
 cat <<INTRO
 Escolha uma das seguintes opções:
 
-1• Restaurar configurações do kea-dhcp4.conf
+1• Restaurar/Backup - kea-dhcp4.conf
 2• Instalar o serviço
 3• Sair
 
@@ -53,64 +61,80 @@ while true;do
 	read opcao
 	case "$opcao" in
 		1)
-		if [ -f "/etc/kea/kea-dhcp4.conf.bak" ]; then
-			echo "Ficheiro backup encontrado!"
-			printf "\n===> A restaurar as configurações... <===\n\n"
-			sudo mv /etc/kea/kea-dhcp4.conf.bak /etc/kea/kea-dhcp4.conf
-			sleep 1
-			printf "\n\n===> ! Configurações default restauradas ! <===\n\n"
-		else
-			while true;do
-				printf "\n->O ficheiro não existe, deseja criá-lo? (S ou N):  "
-				read criar
-				case "$criar" in
+		while true;do
+			clear
+			cat <<- OPT
+			Escolha uma das seguintes opções:
+			1• Restaurar
+			2• Criar backup
+			3• Sair
+
+			OPT
+			printf " -->  "
+			read restBak
+			case "$restBak" in
+				1)
+				if sudo test "/etc/kea/kea-dhcp4.conf.bak"; then
+					echo "Ficheiro backup encontrado!"
+					printf "\n===> A restaurar as configurações... <===\n\n"
+					sudo cp /etc/kea/kea-dhcp4.conf.bak /etc/kea/kea-dhcp4.conf
+					sleep 1
+					printf "\n\n===> ! Configurações restauradas ! <===\n\n"
+					exit
+				else
+					while true;do
+						printf "\n->Não existe backup, deseja instalar o serviço DHCP? (S ou N):  "
+						read restBakError
+						case "$restBakError" in:
+							S|s)
+							printf "\n===> ! A iniciar o script de configuração ! <===\n\n"
+                					sleep 1
+                					break
+							;;
+							N|n)
+                					printf "\n===> ! A encerrar o script... ! <===\n\n"
+                					sleep 1
+                					exit
+                					;;
+							*)
+							echo " - ? Opção inválida, escolha S ou N ? - "
+                					;;
+						esac
+					done
+				fi
+				2)
+				echo "->Criar backup? (S ou N)"
+				read createBak
+				case "$createBak" in
 					S|s)
-					printf "\n===> A Criar o ficheiro... <===\n\n"
-					sudo touch /etc/kea/kea-dhcp4.conf
-					sudo cat <<- 'CREATE' > /etc/kea/kea-dhcp4.conf 
-					{
-					"Dhcp4": {
-						"valid-lifetime": 4000,
-						"renew-timer": 1000,
-						"rebind-timer": 2000,
-
-						"interfaces-config": {
-							"interfaces": [ "eth0" ]
-						},
-
-						"lease-database": {
-							"type": "memfile",
-							"persist": true,
-							"name": "/var/lib/kea/dhcp4.leases"
-						},
-
-						"subnet4": [
-							{
-								"subnet": "192.0.2.0/24",
-								"pools": [
-									{
-										"pool": "192.0.2.1 - 192.0.2.200"
-									}
-								]
-							}
-						]
-					}
-					}
-					CREATE
-					sleep 1
-					printf "\n\n===> ! Ficheiro .conf restaurado ! <===\n\n"
-					echo "! O novo ficheiro encontra-se em /etc/kea/kea-dhcp4.conf"
-					exit
-					;;
-					N|n)
-					printf "\n===> ! O ficheiro não será criado, a fechar o Script... ! <===\n\n"
-					sleep 1
-					exit
-					;;
-					*)
-					echo "! Opção inválida, escolha S (sim) ou N (não)"
-					;;
-				esac
+					if sudo test "/etc/kea/kea-dhcp4.conf"; then
+						echo "Ficheiro .conf encontrado!"
+						printf "\n===> A criar Backup... <===\n\n"
+						sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
+						sleep 1
+						printf "\n\n===> ! Ficheiro backup criado ! <===\n\n"
+						printf '\n\n===> O ficheiro encontra-se em "/etc/kea/kea-dhcp4.conf.bak" <===\n\n'
+						exit
+					else
+						while true;do
+                                                printf "\n->Não existe ficheiro .conf, deseja instalar o serviço DHCP? (S ou N):  "
+                                                read createBakError
+                                                case "$createBakError" in:
+                                                        S|s)
+                                                        printf "\n===> ! A iniciar o script de configuração ! <===\n\n"
+                                                        sleep 1
+                                                        break
+                                                        ;;
+                                                        N|n)
+                                                        printf "\n===> ! A encerrar o script... ! <===\n\n"
+                                                        sleep 1
+                                                        exit
+                                                        ;;
+                                                        *)
+                                                        echo " - ? Opção inválida, escolha S ou N ? - "
+                                                        ;;
+						esac
+                                        	done
 			done
 		fi
 		break
@@ -141,28 +165,44 @@ printf "\n***** - Configs do Server - *****"
 printf "\n*********************************\n"
 
 # Pedir ao utilizador para escolher a interface de Internet Exterior - ! Funciona (sem failsafe)
-printf "\n-> Escolha a interface de Internet Exterior:  "
-read interfaceInternet
+#printf "\n-> Escolha a interface de Internet Exterior:  "
+#read interfaceInternet
 
 # Pedir ao utilizador para escolher a interface de Rede para DHCP - ! Funciona (sem failsafe) 
 printf "\n-> Escolha a interface de rede para DHCP:  "
 read interface
 
-# Perguntar ao utilizador se a Gateway/IP do Server será .1 ou .254 - ! Funciona
+# Perguntar ao utilizador se o IP do Server DHCP será .2 ou .253 - ! Funciona
 while true;do
-	printf "\n-> A Gateway/IP do Server será 1 ou 254?:  "
+	printf "\n-> O IP do Server DHCP será 2 ou 253?:  "
 	read gatewayipserv
 
-	if [ "$gatewayipserv" -eq 1 ] || [ "$gatewayipserv" -eq 254 ];then
+	if [ "$gatewayipserv" -eq 2 ] || [ "$gatewayipserv" -eq 253 ];then
 		break
 	else
-		echo "! Gateway inválido, insira 1 ou 254."
+		echo "! IP inválido, insira 2 ou 253."
 	fi
 done
 
+# Perguntar qual vai ser o IP do Server DNS/Gateway será .1 ou .254
+while true; do
+	printf "\n-> O IP do Server DNS/Gateway será 1 ou 254?:  "
+	read ipserverDNS
+
+	if [ "$ipserverDNS" -eq 1 ] || [ "$ipserverDNS" -eq 254];then
+		break
+	else
+		echo "! IP DNS/Gateway inválido, insira 1 ou 254."
+	fi
+done
+
+# Perguntar ao utilizador qual será o dominio DNS - ! Sem failsafe
+printf "\n-> Qual será o dominio de DNS? (ex: dominio.xyz):  "
+read dominioDNS
+
 # Pedir ao utilizador para inserir o IP de Subnet - Funciona
 while true;do
-	printf "\n-> Qual será o número da Subnet? (Range: 192.168. [1-255] .0/24):  "
+	printf "\n-> Qual será a Subnet? (Range: 192.168. [1-255] .0/24):  "
 	read subnet
 	if [ "$subnet" -ge 1 ] && [ "$subnet" -le 255 ];then
 		break
@@ -174,14 +214,14 @@ done
 # ------------------------------------------------------------------------- #
 
 # Variáveis - Failsafe de colisão ServerIP <--> DHCP
-if [ "$gatewayipserv" -eq 1 ];then
-	DHCPminMin=2
-	DHCPminMax=253
-	DHCPmaxMax=254
-else
-	DHCPminMin=1
+if [ "$gatewayipserv" -eq 2 ];then
+	DHCPminMin=3
 	DHCPminMax=252
 	DHCPmaxMax=253
+else
+	DHCPminMin=2
+	DHCPminMax=251
+	DHCPmaxMax=252
 fi
 
 # Pedir range de IPs para o DHCP - ! Funciona
@@ -195,7 +235,7 @@ while true;do
 	if [ "$DHCPmin" -ge "$DHCPminMin" ] && [ "$DHCPmin" -le "$DHCPminMax" ];then
 		break
 	elif [ "$DHCPmin" -eq $gatewayipserv ];then
-		echo "! Este IP está a ser usado pela Gateway!"
+		echo "! Este IP está a ser usado pelo Server DHCP!"
 	elif [ "$DHCPmin" -eq 255 ];then
 		echo "! Não é possivel utilizar o endereco de Broadcast!"
 	else
@@ -209,7 +249,7 @@ while true;do
 	if [ "$DHCPmax" -ge "$DHCPmin" ] && [ "$DHCPmax" -le $DHCPmaxMax ];then
 		break
 	elif [ "$DHCPmax" -eq $gatewayipserv ];then
-		echo "! Este IP está a ser usado pela Gateway!"
+		echo "! Este IP está a ser usado pelo Server DHCP!"
 	elif [ "$DHCPmax" -eq 255 ];then
 		echo "! Não é possivel utilizar o endereco de Broadcast!"
 	else
@@ -223,8 +263,12 @@ printf "\n\n\n************************************"
 printf "\n***** - Confirmar alteracões - *****"
 printf "\n************************************\n"
 echo "• Serviço DHCP: Kea-DHCP4"
+echo "-----------------------------------------------------------------"
+echo "• Dominio DNS: $dominioDNS"
+echo "• IP do Server DNS/Gateway: 192.168.$subnet.'$ipserverDNS'/24"
+echo "-----------------------------------------------------------------"
 echo "• Interface da rede DHCP: $interface"
-echo "• IP da Gateway/Server: 192.168.$subnet.'$gatewayipserv'/24"
+echo "• IP do Server DHCP (este): 192.168.$subnet.'$gatewayipserv'/24"
 echo "• DHCP ativo de: $DHCPmin até $DHCPmax"
 echo "• Subnet da rede: 192.168.'$subnet'.0/24"
 
@@ -249,19 +293,19 @@ done
 
 # --------------------------- * Instalar dependencies * --------------------------
 
-printf "\n\n# ---------- A atualizar o sistema ---------- #"
+#printf "\n\n# ---------- A atualizar o sistema ---------- #"
 # Dar update ao sistema
-sudo yum update -y
+#sudo yum update -y
 
-printf "\n\n# ---------- A instalar o serviço DHCP ---------- #"
+#printf "\n\n# ---------- A instalar o serviço DHCP ---------- #"
 # Instalar dhcpd
-sudo yum install kea -y
+#sudo yum install kea -y
 
 # ----------------------------- * Aplicar Settings * ----------------------------- #
 
 # Configurar a placa de rede
 sudo nmcli connection modify "$interface" ipv4.addresses 192.168.$subnet.$gatewayipserv/24
-sudo nmcli connection modify "$interface" ipv4.method manual ipv4.gateway 192.168.$subnet.$gatewayipserv
+sudo nmcli connection modify "$interface" ipv4.method manual ipv4.gateway 192.168.$subnet.$ipserverDNS
 sudo nmcli connection modify "$interface" ipv4.dns 8.8.8.8	# Google DNS
 sudo nmcli connection up "$interface"
 
@@ -270,60 +314,56 @@ sudo cat <<CONFIG > /etc/kea/kea-dhcp4.conf
 {
 "Dhcp4": {
     "interfaces-config": {
-        "interfaces": [ "$interface" ]	# Especificar interface para DHCP
+        "interfaces": [ "$interface" ]
 	},
-    "expired-leases-processing": {					# Configs de processamento das Leases DHCP
-		"reclaim-timer-wait-time": 10,			#
-        "flush-reclaimed-timer-wait-time": 25,	#
-        "hold-reclaimed-time": 3600,			#
-        "max-reclaim-leases": 100,				#
-        "max-reclaim-time": 250,				#
-        "unwarned-reclaim-cycles": 5			#
+    "expired-leases-processing": {
+		"reclaim-timer-wait-time": 10,
+        "flush-reclaimed-timer-wait-time": 25,
+        "hold-reclaimed-time": 3600,
+        "max-reclaim-leases": 100,
+        "max-reclaim-time": 250,
+        "unwarned-reclaim-cycles": 5
     },
-    "renew-timer": 900,		# Timer do T1 - Ao chegar a este valor, se o cliente responder ao server DHCP (unicast), a Lease renova, caso contrário continua a tentar até ao Timer T2
-    "rebind-timer": 1800,	# Timer do T2 - Ao chegar a este valor, se o cliente responder a qualquer server DHCP na rede (Broadcast porque IPV4), a Lease renova, caso contrário continua a tentar até a Lease expirar
-    "valid-lifetime": 3600,	# Lifetime da Lease DHCP, ao chegar aqui a Lease expira
+    "renew-timer": 900,
+    "rebind-timer": 1800,
+    "valid-lifetime": 3600,
     "option-data": [
         {
-            # specify your DNS server
             "name": "domain-name-servers",
-            "data": "$gatewayipserv"	# IP do server DNS
+            "data": "192.168.$subnet.$ipserverDNS"
         },
         {
-            # specify your domain name
             "name": "domain-name",
-            "data": "srv.world"		# Adicionar quando DNS tiver feito
+            "data": "$dominioDNS"
         },
         {
-            # specify your domain-search base
             "name": "domain-search",
-            "data": "srv.world"		# Mesma merda que acima
+            "data": "$dominioDNS"
         }
     ],
     "subnet4": [
         {
             "id": 1,
-            "subnet": "192.168.$subnet.0/24",	# Subnet que utilizará DHCP
-            "pools": [ { "pool": "192.168.$subnet.$DHCPmin - 192.168.$subnet.$DHCPmax" } ],		# Range DHCP
+            "subnet": "192.168.$subnet.0/24",
+            "pools": [ { "pool": "192.168.$subnet.$DHCPmin - 192.168.$subnet.$DHCPmax" } ],
             "option-data": [
                 {
                     "name": "routers",
-                    "data": "$gatewayipserv"	# IP da Gateway/Server
+                    "data": "192.168.$subnet.$ipserverDNS"
                 }
             ]
         }
     ],
-# Escolher local para guardar logs + o que guardar nas logs
     "loggers": [
     {
-        "name": "kea-dhcp4",	# Pede ao kea para dar log apenas de DHCPv4
+	"name": "kea-dhcp4",
         "output-options": [
             {
-                "output": "/var/log/kea/kea-dhcp4.log"		# Local e nome do ficheiro log
+		"output": "/var/log/kea/kea-dhcp4.log"
             }
         ],
-        "severity": "INFO",		# Define os logs para mostrar erros, conflitos e leases
-        "debuglevel": 0			# Desligado - Quando ativo mostra logs super detalhados sobre tudo o que esteja conectado ao Kea e ele próprio
+        "severity": "INFO",
+        "debuglevel": 0
     }
   ]
 }
