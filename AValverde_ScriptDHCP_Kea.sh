@@ -88,17 +88,17 @@ while true;do
 						case "$restBakError" in:
 							S|s)
 							printf "\n===> ! A iniciar o script de configuração ! <===\n\n"
-                					sleep 1
-                					break
+                			sleep 1
+                			break
 							;;
 							N|n)
-                					printf "\n===> ! A encerrar o script... ! <===\n\n"
-                					sleep 1
-                					exit
-                					;;
+                			printf "\n===> ! A encerrar o script... ! <===\n\n"
+                			sleep 1
+                			exit
+                			;;
 							*)
 							echo " - ? Opção inválida, escolha S ou N ? - "
-                					;;
+                			;;
 						esac
 					done
 				fi
@@ -117,26 +117,41 @@ while true;do
 						exit
 					else
 						while true;do
-                                                printf "\n->Não existe ficheiro .conf, deseja instalar o serviço DHCP? (S ou N):  "
-                                                read createBakError
-                                                case "$createBakError" in:
-                                                        S|s)
-                                                        printf "\n===> ! A iniciar o script de configuração ! <===\n\n"
-                                                        sleep 1
-                                                        break
-                                                        ;;
-                                                        N|n)
-                                                        printf "\n===> ! A encerrar o script... ! <===\n\n"
-                                                        sleep 1
-                                                        exit
-                                                        ;;
-                                                        *)
-                                                        echo " - ? Opção inválida, escolha S ou N ? - "
-                                                        ;;
-						esac
-                                        	done
-			done
-		fi
+							printf "\n->Não existe ficheiro .conf, deseja instalar o serviço DHCP? (S ou N):  "
+                            read createBakError
+                            case "$createBakError" in:
+                                S|s)
+                                printf "\n===> ! A iniciar o script de configuração ! <===\n\n"
+                                sleep 1
+                                break
+                                ;;
+                                N|n)
+                                printf "\n===> ! A encerrar o script... ! <===\n\n"
+                                sleep 1
+                                exit
+                                ;;
+                                *)
+                                echo " - ? Opção inválida, escolha S ou N ? - "
+                                ;;
+							esac
+						done
+					fi
+					N|n)
+					printf "\n===> ! A encerrar o script... ! <===\n\n"
+                	sleep 1
+                	exit
+					;;
+				esac
+				3)
+				printf "\n===> ! Opção de saída escolhida, a encerrar o script... ! <===\n\n"
+				sleep 1
+				exit
+				;;
+				*)
+				echo " - ? Opção inválida, escolha uma opçao de 1-3 ? - "
+				;;
+			esac
+		done
 		break
 		;;
 		2)
