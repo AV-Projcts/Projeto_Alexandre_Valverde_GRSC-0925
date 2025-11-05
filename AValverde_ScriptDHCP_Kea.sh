@@ -63,7 +63,17 @@ while true;do
 		1)
 		while true;do
 			clear
-			cat <<- OPT
+			cat <<- 'OPT'
+			 _______________
+			|# :  .....  : #|
+			|  :  .....  :  |
+			|  :_________:  |
+			|    _______    |
+			|   | __    |   |
+			|   ||__|   |   |
+			\___||__|___|___|
+
+
 			Escolha uma das seguintes opções:
 			1• Restaurar
 			2• Criar backup
@@ -148,7 +158,7 @@ while true;do
 				3)
 				printf "\n===> ! Opção de saída escolhida, a encerrar o script... ! <===\n\n"
 				sleep 1
-				exit
+				break 2
 				;;
 				*)
 				echo " - ? Opção inválida, escolha uma opçao de 1-3 ? - "
