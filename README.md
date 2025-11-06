@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="![frog-meme](https://github.com/user-attachments/assets/a8335d35-81d6-49fa-956a-a4e944df2cc2)" alt="Vídeo demonstrando Kea DHCP e Bind DNS" width="400"/>
+  <img src="https://github.com/user-attachments/assets/a8335d35-81d6-49fa-956a-a4e944df2cc2" alt="Vídeo demonstrando Kea DHCP e Bind DNS" width="400"/>
 
   <br/>
   Script DHCP (Kea) + DNS (Bind)
